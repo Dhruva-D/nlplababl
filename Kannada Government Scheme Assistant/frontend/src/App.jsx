@@ -4,7 +4,7 @@ import { searchScheme } from './services/api';
 
 function App() {
   const [query, setQuery] = useState('');
-  const [scheme, setScheme] = useState(null);
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -14,14 +14,15 @@ function App() {
 
     setLoading(true);
     setError('');
-    setScheme(null);
+    setResults([]);
 
     try {
       const response = await searchScheme(query);
-      if (response && response.result) {
-        setScheme(response.result);
+      if (response && response.results && response.results.length > 0) {
+        setResults(response.results);
       } else {
-        setError('No matching scheme found. Try rephrasing your search.');
+        // Use the message from the backend if provided, else a fallback
+        setError(response?.message || 'No relevant government scheme found.');
       }
     } catch (err) {
       setError('Failed to connect to the backend server. Is FastAPI running?');
@@ -38,10 +39,10 @@ function App() {
       </div>
 
       <form className="search-box" onSubmit={handleSearch}>
-        <input 
-          type="text" 
-          className="kannada-input" 
-          placeholder="What kind of assistance do you need? (e.g., ಮಹಿಳೆಯರಿಗೆ ಹಣಕಾಸು ಸಹಾಯ)" 
+        <input
+          type="text"
+          className="kannada-input"
+          placeholder="What kind of assistance do you need? (e.g., ಮಹಿಳೆಯರಿಗೆ ಹಣಕಾಸು ಸಹಾಯ)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -50,27 +51,26 @@ function App() {
         </button>
       </form>
 
-      {error && (
-        <div className="no-match">
-          {error}
-        </div>
-      )}
+      {error && <div className="no-match">{error}</div>}
 
-      {scheme && (
-        <div className="result-card">
-          <h2 className="scheme-title">{scheme.scheme_name}</h2>
-          <p className="scheme-desc">{scheme.description}</p>
-          
-          <div className="tags-container">
-            {scheme.keywords && scheme.keywords.map((tag, idx) => (
-              <span key={idx} className="tag">#{tag}</span>
-            ))}
-            {scheme.ai_confidence_score && (
-              <span className="tag" style={{background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', borderColor: 'rgba(139, 92, 246, 0.2)'}}>
-                AI Match: {(scheme.ai_confidence_score * 100).toFixed(1)}%
-              </span>
-            )}
-          </div>
+      {results.length > 0 && (
+        <div className="results-list">
+          <p className="results-header">Top {results.length} Matching Schemes</p>
+          {results.map((scheme, idx) => (
+            <div className="result-card" key={scheme._id || idx}>
+              <div className="rank-badge">#{idx + 1}</div>
+              <h2 className="scheme-title">{scheme.scheme_name}</h2>
+              <p className="scheme-desc">{scheme.description}</p>
+              <div className="tags-container">
+                {scheme.keywords && scheme.keywords.map((tag, i) => (
+                  <span key={i} className="tag">#{tag}</span>
+                ))}
+                <span className="tag confidence-tag">
+                  AI Match: {scheme.ai_confidence_score}%
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

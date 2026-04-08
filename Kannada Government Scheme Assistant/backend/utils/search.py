@@ -26,36 +26,55 @@ def calculate_cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
     return dot_product / (magnitude1 * magnitude2)
 
 
-def find_most_relevant_scheme(query_embedding: list[float], stored_schemes: list[dict]) -> dict | None:
+# ---------------------------------------------------------------
+# Configurable threshold: change this one number to raise/lower
+# the minimum quality bar for a result to be shown.
+# Value is a percentage (0–100). Default: 40.0 means 40%.
+# ---------------------------------------------------------------
+MIN_CONFIDENCE_THRESHOLD = 40.0
+
+
+def find_top_matching_schemes(
+    query_embedding: list[float],
+    stored_schemes: list[dict],
+    top_n: int = 3,
+    threshold: float = MIN_CONFIDENCE_THRESHOLD
+) -> list[dict]:
     """
-    1. Compares the Math Vector of a User's Query to every Scheme Vector in our Database.
-    2. Identifies the highest score, representing the most conceptually similar scheme.
-    3. Returns the winning scheme dictionary.
+    1. Scores every scheme against the user query using cosine similarity.
+    2. Filters out any scheme whose score is below `threshold` percent.
+    3. Sorts remaining schemes highest-score-first.
+    4. Returns the top N, or an empty list if nothing passes the threshold.
     """
     if not stored_schemes:
-        return None
+        return []
 
-    best_scheme = None
-    # Start at the absolute lowest possible score (-1.0)
-    highest_score = -1.0 
+    scored_schemes = []
 
     for scheme in stored_schemes:
         scheme_embedding = scheme.get("embedding", [])
-        
-        # Skip schemes that haven't been seeded properly with an embedding
+
+        # Skip schemes not yet embedded
         if not scheme_embedding:
             continue
 
-        # Calculate semantic similarity
         score = calculate_cosine_similarity(query_embedding, scheme_embedding)
-        
-        # If this scheme's score beats our previous highest score, we have a new winner!
-        if score > highest_score:
-            highest_score = score
-            best_scheme = scheme
-            
-    # Attach a confidence score so the frontend (or logs) knows how strong the match was
-    if best_scheme:
-        best_scheme["ai_confidence_score"] = highest_score
 
-    return best_scheme
+        # Convert ObjectId to string for JSON serialization
+        scheme["_id"] = str(scheme["_id"])
+
+        # Express score as a clean percentage rounded to 2 decimal places
+        scheme["ai_confidence_score"] = round(score * 100, 2)
+
+        scored_schemes.append(scheme)
+
+    # Sort highest confidence first
+    sorted_schemes = sorted(scored_schemes, key=lambda x: x["ai_confidence_score"], reverse=True)
+
+    # If the very best match is still below the threshold, nothing is relevant enough
+    if not sorted_schemes or sorted_schemes[0]["ai_confidence_score"] < threshold:
+        return []
+
+    # Filter out individual results that fall below threshold, then cap at top_n
+    above_threshold = [s for s in sorted_schemes if s["ai_confidence_score"] >= threshold]
+    return above_threshold[:top_n]

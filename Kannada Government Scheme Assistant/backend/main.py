@@ -1,16 +1,25 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import logging
 
 # 1. Import our modular routes and database connection
 from routes.health import router as health_router
 from routes.search import router as search_router
 from database.database import get_database
 
-# 2. Initialize the main FastAPI application
+# 2. Startup/shutdown lifecycle using modern FastAPI lifespan
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Runs on startup: connect to database
+    get_database()
+    yield
+    # Runs on shutdown (nothing to clean up here)
+
+# 3. Initialize the main FastAPI application
 app = FastAPI(
     title="Kannada Government Scheme Assistant API",
-    description="Backend API to serve scheme data to our React Frontend"
+    description="Backend API to serve scheme data to our React Frontend",
+    lifespan=lifespan
 )
 
 # 3. Configure CORS (Cross-Origin Resource Sharing)
@@ -29,11 +38,6 @@ app.add_middleware(
     allow_headers=["*"],         # Allow all headers
 )
 
-# 4. Connect to the Database when the server starts up
-@app.on_event("startup")
-async def startup_db_client():
-    """ Runs right before the server starts taking requests """
-    get_database() # Triggers the connection to MongoDB
 
 # 5. Connect our modular routes
 # We include the 'health' route we created and prefix it with '/api'
