@@ -1,8 +1,12 @@
+import os
+from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 
-# This is your MongoDB connection URL. 
-# By default, "mongodb://localhost:27017" connects to a MongoDB server running locally on your PC.
-MONGO_URL = "mongodb+srv://corsit:clubofrobotics2023@corsit.q9mskze.mongodb.net/?retryWrites=true&w=majority"
+# Load secure environment variables
+load_dotenv()
+
+# This pulls your secure connection URL from the hidden .env file so it never gets exposed online.
+MONGO_URL = os.getenv("MONGO_URI")
 
 # These variables will hold our database connection
 client = None

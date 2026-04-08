@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from database.database import get_database
 from models.scheme import SchemeModel
+from utils.nlp import generate_embedding
 
 # Our sample data array matching the SchemeModel requirements
 sample_schemes = [
@@ -56,6 +57,10 @@ async def seed_db():
     # Validate the raw Python dictionaries against our Pydantic SchemeModel
     schemes_to_insert = []
     for scheme_dict in sample_schemes:
+        print(f"Generating AI embeddings for {scheme_dict['scheme_name']}...")
+        # Create vectors based on the description
+        scheme_dict["embedding"] = generate_embedding(scheme_dict["description"])
+        
         # SchemeModel(**scheme_dict) ensures that all required fields exist and are of correct types
         valid_model = SchemeModel(**scheme_dict)
         # Convert it back to a dictionary so MongoDB can store it

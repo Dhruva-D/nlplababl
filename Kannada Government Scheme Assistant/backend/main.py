@@ -4,6 +4,7 @@ import logging
 
 # 1. Import our modular routes and database connection
 from routes.health import router as health_router
+from routes.search import router as search_router
 from database.database import get_database
 
 # 2. Initialize the main FastAPI application
@@ -37,6 +38,7 @@ async def startup_db_client():
 # 5. Connect our modular routes
 # We include the 'health' route we created and prefix it with '/api'
 app.include_router(health_router, prefix="/api", tags=["Health Checks"])
+app.include_router(search_router, prefix="/api", tags=["Search API"])
 
 
 # 6. A friendly root route 
