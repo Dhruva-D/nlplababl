@@ -52,7 +52,7 @@ A full-stack, AI-powered application designed to help citizens naturally search 
 ### Run Backend
 ```bash
 cd backend
-venv\Scripts\activate
+source venv/Scripts/activate
 pip install -r requirements.txt
 
 # Start Server

@@ -33,28 +33,42 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="header">
-        <h1 className="title">Kannada Scheme Assistant</h1>
-        <p className="subtitle">AI-Powered Government Benefit Finder</p>
+      <div className="hero-section">
+        <div className="hero-badge">
+          <span className="badge-icon">✨</span>
+          <span>Powered by Advanced NLP AI</span>
+        </div>
+        <h1 className="hero-title">
+          Discover Your <span>Government Schemes</span> Instantly
+        </h1>
+        <p className="hero-subtitle">
+          An intelligent assistant to find the perfect Karnataka & Central Government schemes for you. Just type what you need in English or Kannada.
+        </p>
+
+        <form className="hero-search-box" onSubmit={handleSearch}>
+          <div className="input-group">
+            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              className="hero-input"
+              placeholder="Try 'ಮಹಿಳೆಯರಿಗೆ ಹಣಕಾಸು ಸಹಾಯ' or 'education loan'"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <button type="submit" className="hero-search-btn" disabled={loading}>
+              {loading ? <div className="spinner"></div> : "Search"}
+            </button>
+          </div>
+        </form>
       </div>
 
-      <form className="search-box" onSubmit={handleSearch}>
-        <input
-          type="text"
-          className="kannada-input"
-          placeholder="What kind of assistance do you need? (e.g., ಮಹಿಳೆಯರಿಗೆ ಹಣಕಾಸು ಸಹಾಯ)"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button type="submit" className="search-btn" disabled={loading}>
-          {loading ? <div className="spinner"></div> : "Search Schemes"}
-        </button>
-      </form>
-
-      {error && <div className="no-match">{error}</div>}
+      {error && <div className="no-match animate-fade-in">{error}</div>}
 
       {results.length > 0 && (
-        <div className="results-list">
+        <div className="results-list animate-fade-in">
           <p className="results-header">Top {results.length} Matching Schemes</p>
           {results.map((scheme, idx) => (
             <div className="result-card" key={scheme._id || idx}>
